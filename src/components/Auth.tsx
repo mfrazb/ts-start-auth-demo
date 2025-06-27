@@ -28,17 +28,7 @@ export function Auth({
               type="email"
               name="email"
               id="email"
-              className="px-2 py-1 w-full rounded border border-gray-500/20 bg-white dark:bg-gray-800"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-xs">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              id="password"
+              required
               className="px-2 py-1 w-full rounded border border-gray-500/20 bg-white dark:bg-gray-800"
             />
           </div>
