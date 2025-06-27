@@ -1,13 +1,13 @@
-import { redirect, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn, useServerFn } from '@tanstack/react-start'
-import { hashPassword, prismaClient } from '~/utils/prisma'
+import { prismaClient } from '~/utils/prisma'
 import { useMutation } from '~/hooks/useMutation'
 import { Auth } from '~/components/Auth'
-import { useAppSession } from '~/utils/session'
+import { createMagicLink, sendMagicLink } from '~/utils/magic-link'
 
 export const signupFn = createServerFn({ method: 'POST' })
   .validator(
-    (d: { email: string; password: string; redirectUrl?: string }) => d,
+    (d: { email: string; redirectUrl?: string }) => d,
   )
   .handler(async ({ data }) => {
     // Check if the user already exists
@@ -17,49 +17,30 @@ export const signupFn = createServerFn({ method: 'POST' })
       },
     })
 
-    // Encrypt the password using Sha256 into plaintext
-    const password = await hashPassword(data.password)
-
-    // Create a session
-    const session = await useAppSession()
-
     if (found) {
-      if (found.password !== password) {
-        return {
-          error: true,
-          userExists: true,
-          message: 'User already exists',
-        }
+      return {
+        error: true,
+        userExists: true,
+        message: 'User already exists. Try signing in instead.',
       }
-
-      // Store the user's email in the session
-      await session.update({
-        userEmail: found.email,
-      })
-
-      // Redirect to the prev page stored in the "redirect" search param
-      throw redirect({
-        href: data.redirectUrl || '/',
-      })
     }
 
     // Create the user
     const user = await prismaClient.user.create({
       data: {
         email: data.email,
-        password,
+        password: '', // No password needed for magic link auth
       },
     })
 
-    // Store the user's email in the session
-    await session.update({
-      userEmail: user.email,
-    })
+    // Create and send magic link
+    const token = await createMagicLink(data.email)
+    await sendMagicLink(data.email, token)
 
-    // Redirect to the prev page stored in the "redirect" search param
-    throw redirect({
-      href: data.redirectUrl || '/',
-    })
+    return {
+      success: true,
+      message: 'Check your email for a magic link to complete your signup!',
+    }
   })
 
 export const Route = createFileRoute('/signup')({
@@ -81,15 +62,19 @@ function SignupComp() {
         signupMutation.mutate({
           data: {
             email: formData.get('email') as string,
-            password: formData.get('password') as string,
           },
         })
       }}
       afterSubmit={
-        signupMutation.data?.error ? (
-          <>
-            <div className="text-red-400">{signupMutation.data.message}</div>
-          </>
+        signupMutation.data ? (
+          <div className={`text-center ${signupMutation.data.success ? 'text-green-400' : 'text-red-400'}`}>
+            {signupMutation.data.message}
+            {signupMutation.data.success && (
+              <div className="mt-2 text-sm text-gray-500">
+                Check your email and click the magic link to complete your signup.
+              </div>
+            )}
+          </div>
         ) : null
       }
     />

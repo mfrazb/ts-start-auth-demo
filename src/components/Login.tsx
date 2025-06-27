@@ -3,7 +3,6 @@ import { useServerFn } from '@tanstack/react-start'
 import { useMutation } from '../hooks/useMutation'
 import { loginFn } from '../routes/_authed'
 import { Auth } from './Auth'
-import { signupFn } from '~/routes/signup'
 
 export function Login() {
   const router = useRouter()
@@ -11,21 +10,16 @@ export function Login() {
   const loginMutation = useMutation({
     fn: loginFn,
     onSuccess: async (ctx) => {
-      if (!ctx.data?.error) {
-        await router.invalidate()
-        router.navigate({ to: '/' })
+      if (ctx.data?.success) {
+        // Don't navigate - show success message instead
         return
       }
     },
   })
 
-  const signupMutation = useMutation({
-    fn: useServerFn(signupFn),
-  })
-
   return (
     <Auth
-      actionText="Login"
+      actionText="Send Magic Link"
       status={loginMutation.status}
       onSubmit={(e) => {
         const formData = new FormData(e.target as HTMLFormElement)
@@ -33,37 +27,19 @@ export function Login() {
         loginMutation.mutate({
           data: {
             email: formData.get('email') as string,
-            password: formData.get('password') as string,
           },
         })
       }}
       afterSubmit={
         loginMutation.data ? (
-          <>
-            <div className="text-red-400">{loginMutation.data.message}</div>
-            {loginMutation.data.userNotFound ? (
-              <div>
-                <button
-                  className="text-blue-500"
-                  onClick={(e) => {
-                    const formData = new FormData(
-                      (e.target as HTMLButtonElement).form!,
-                    )
-
-                    signupMutation.mutate({
-                      data: {
-                        email: formData.get('email') as string,
-                        password: formData.get('password') as string,
-                      },
-                    })
-                  }}
-                  type="button"
-                >
-                  Sign up instead?
-                </button>
+          <div className={`text-center ${loginMutation.data.success ? 'text-green-400' : 'text-red-400'}`}>
+            {loginMutation.data.message}
+            {loginMutation.data.success && (
+              <div className="mt-2 text-sm text-gray-500">
+                Check your email and click the magic link to sign in.
               </div>
-            ) : null}
-          </>
+            )}
+          </div>
         ) : null
       }
     />

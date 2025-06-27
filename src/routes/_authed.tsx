@@ -1,45 +1,38 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { hashPassword, prismaClient } from '~/utils/prisma'
+import { prismaClient } from '~/utils/prisma'
 import { Login } from '~/components/Login'
 import { useAppSession } from '~/utils/session'
+import { createMagicLink, sendMagicLink } from '~/utils/magic-link'
 
 export const loginFn = createServerFn({ method: 'POST' })
-  .validator((d: { email: string; password: string }) => d)
+  .validator((d: { email: string }) => d)
   .handler(async ({ data }) => {
-    // Find the user
-    const user = await prismaClient.user.findUnique({
+    // Create or find user
+    let user = await prismaClient.user.findUnique({
       where: {
         email: data.email,
       },
     })
 
-    // Check if the user exists
+    // If user doesn't exist, create them
     if (!user) {
-      return {
-        error: true,
-        userNotFound: true,
-        message: 'User not found',
-      }
+      user = await prismaClient.user.create({
+        data: {
+          email: data.email,
+          password: '', // No password needed for magic link auth
+        },
+      })
     }
 
-    // Check if the password is correct
-    const hashedPassword = await hashPassword(data.password)
+    // Create and send magic link
+    const token = await createMagicLink(data.email)
+    await sendMagicLink(data.email, token)
 
-    if (user.password !== hashedPassword) {
-      return {
-        error: true,
-        message: 'Incorrect password',
-      }
+    return {
+      success: true,
+      message: 'Check your email for a magic link to sign in!',
     }
-
-    // Create a session
-    const session = await useAppSession()
-
-    // Store the user's email in the session
-    await session.update({
-      userEmail: user.email,
-    })
   })
 
 export const Route = createFileRoute('/_authed')({
