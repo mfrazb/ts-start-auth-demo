@@ -1,0 +1,33 @@
+# Cursor Rules for React/TypeScript Project
+
+## Code Style
+- Use TypeScript for all new files
+- Prefer functional components with hooks over class components
+- Use destructured imports (e.g., `import { useState } from 'react'`) instead of namespace imports
+- Use modern React patterns (no mounted state checks, declarative over imperative)
+- Prefer `export *` in barrel files for simplicity
+
+## File Organization
+- Keep hooks in `src/hooks/` directory
+- Use barrel exports (`index.ts`) for clean imports
+- Group related components in subdirectories
+- Use `.tsx` extension for React components, `.ts` for utilities
+
+## Naming Conventions
+- Use camelCase for variables and functions
+- Use PascalCase for components and types
+- Use kebab-case for file names
+- Prefix custom hooks with "use"
+
+## Best Practices
+- Avoid direct DOM manipulation in React components
+- Use React's declarative approach over imperative
+- Prefer composition over inheritance
+- Keep components focused and single-purpose
+- Use TypeScript interfaces for prop types
+
+## Project-Specific
+- This is a TanStack Start project with React Router
+- Use the existing session management patterns
+- Follow the established routing structure
+- Use Tailwind CSS for styling with dark mode support 
