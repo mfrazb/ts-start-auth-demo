@@ -1,4 +1,4 @@
-# Welcome to TanStack.com!
+# Tanstack Start / Cursor Demo 
 
 This site is built with TanStack Router!
 
