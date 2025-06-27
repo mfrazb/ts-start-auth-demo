@@ -1,6 +1,8 @@
 # Tanstack Start / Cursor Demo 
 
-This site is built with TanStack Router!
+This is a demo site to practice using Cursor on a TanStack Start project. 
+
+Task #1 - migrate authentication from typical username password sign in to magic link authentication - in progress 6/26/25
 
 - [TanStack Router Docs](https://tanstack.com/router)
 
